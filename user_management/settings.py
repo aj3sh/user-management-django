@@ -10,8 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
+import environ
 from datetime import timedelta
 from pathlib import Path
+
+# loading environment
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +27,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$zx26p_yum0+0)n$$o$x2g4jtls^6mk*m&&u4qt4%03k6tion-'
+SECRET_KEY = env.str('SECRET_KEY', default='django-insecure-$zx26p_yum0+0)n$$o$x2g4jtls^6mk*m&&u4qt4%03k6tion-')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 
 # Application definition
@@ -80,10 +86,7 @@ WSGI_APPLICATION = 'user_management.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+	'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
 }
 
 
@@ -133,6 +136,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User
 AUTH_USER_MODEL = 'users.User'
 
+
+# REST FRAMEWORK AND JWT SETTINGS
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -144,4 +149,54 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+}
+
+
+# Logging
+LOG_FILE_PATH = env.str('LOG_FILE_PATH', default=BASE_DIR / 'log/debug.log')
+
+# creating directory
+os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
+with open(LOG_FILE_PATH, "w") as f:
+    pass
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+		'standard': {
+			'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+			'datefmt' : "%Y-%b-%d %H:%M:%S"
+		},
+	},
+    'handlers': {
+        'null': {
+			'level':'DEBUG',
+			'class':'logging.NullHandler',
+		},
+		'logfile': {
+			'level':'DEBUG',
+			'class':'logging.handlers.RotatingFileHandler',
+			'filename': LOG_FILE_PATH,
+			'maxBytes': 50000,
+			'backupCount': 50,
+			'formatter': 'standard',
+		},
+		'console':{
+			'level':'INFO',
+			'class':'logging.StreamHandler',
+			'formatter': 'standard'
+		},
+    },
+    'loggers': {
+		'django': {
+			'handlers':['console'],
+			'propagate': True,
+			'level':'WARN',
+		},
+		'users': {
+			'handlers': ['console', 'logfile'],
+			'level': 'DEBUG',
+		},
+	}
 }
