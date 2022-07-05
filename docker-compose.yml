@@ -1,0 +1,33 @@
+version: "3.3"
+  
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=user_management
+      - POSTGRES_USER=user_management_user
+      - POSTGRES_PASSWORD=user_management_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+  web:
+    build: .
+    restart: on-failure
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=psql://user_management_user:user_management_password@db/user_management
+    command: 
+      - /bin/bash
+      - -c
+      - |
+        python manage.py migrate
+        python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
