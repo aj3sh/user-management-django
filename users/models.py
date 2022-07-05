@@ -63,6 +63,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def save(self, *args, **kwargs):
+        self.is_admin = self.is_admin or self.is_superuser
+        return super().save(*args, **kwargs)
+
     def clean(self):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)

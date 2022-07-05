@@ -1,5 +1,6 @@
 # Django User Management
 Django User Management project provides api for managing users and profiles.
+Also see [React User Management](https://github.com/aj3sh/user-management-react) for frontend.
 
 ## Installation
 
@@ -22,4 +23,9 @@ python manage.py createsuperuser
 ## Running the project
 ```bash
 python manage.py runserver
+```
+
+## Running app using Docker (Dev)
+```bash
+docker-compose up --build
 ```
